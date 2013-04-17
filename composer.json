@@ -18,7 +18,7 @@
   }],
   "require": {
     "php": ">=5.3.3",
-    "laiz/laiz-template": "1.1.*",
+    "laiz/laiz-template": "dev-master",
     "laiz/laiz-request": "0.1.*",
     "monolog/monolog": "*",
     "zendframework/zend-stdlib": "2.1.*",
