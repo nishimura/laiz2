@@ -54,11 +54,6 @@ class Controller
             $this->setupDi($diConfig);
         }
 
-        // for ValidatorPluginManager, ConverterPluginManager
-        $im->addTypePreference('Zend\ServiceManager\ServiceLocatorInterface',
-                               'Zend\ServiceManager\ServiceManager');
-        $im->setShared('Zend\ServiceManager\ServiceLocatorInterface', false);
-
         $this->logManager = $this->di->get('Laiz\Core\LogManager');
 
         $this->logManager

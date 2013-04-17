@@ -12,6 +12,7 @@ class Di extends \Zend\Di\Di
         $this->definition = new FlexibleDefinition();
         parent::__construct(new DefinitionList($this->definition));
     }
+
     public function callMethod($instance, $method, $params = array())
     {
         $this->definition->processMethod($this->getClass($instance), $method);

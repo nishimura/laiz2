@@ -25,6 +25,13 @@ class FlexibleDefinition extends RuntimeDefinition
             $this->registerAnnotations($parser);
             $annotationManager->attach($parser);
             $strategy = new IntrospectionStrategy($annotationManager);
+
+            // Default is array('/\w*Aware\w*/');
+            // *PluginManager has this interface.
+            // This needs the config of default implemented class
+            // of the interface by addTypePreference method.
+            // See processClass method.
+            $strategy->setInterfaceInjectionInclusionPatterns(array());
         }
         parent::__construct($strategy, $explicitClasses);
     }
