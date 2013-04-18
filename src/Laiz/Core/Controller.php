@@ -79,6 +79,9 @@ class Controller
             unset($config['include']);
         }
         foreach ($config as $class => $v){
+            if (isset($v['alias']))
+                $im->addAlias($class, $v['alias']);
+
             if (isset($v['parameters']))
                 $im->setParameters($class, $v['parameters']);
 
