@@ -68,6 +68,16 @@ class Controller
     {
         $di = $this->di;
         $im = $di->instanceManager();
+
+        // include other ini files.
+        if (isset($config['include'])){
+            $reader = new Ini();
+            foreach ((array)$config['include'] as $file){
+                $subConfig = $reader->fromFile($file);
+                $this->setupDi($subConfig);
+            }
+            unset($config['include']);
+        }
         foreach ($config as $class => $v){
             if (isset($v['parameters']))
                 $im->setParameters($class, $v['parameters']);
