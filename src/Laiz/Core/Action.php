@@ -164,8 +164,9 @@ class Action
             $actionName = array_pop($parts);
 
         $parts = array_map('ucfirst', $parts);
+        if (implode('', $parts) === '')
+            $parts = array('Index'); // default: Package\Page\Index#index
         $className = $this->getNamespace() . '\\' . implode('', $parts);
-
 
         if (!$actionName)
             $actionName = self::ACTION_INDEX;
