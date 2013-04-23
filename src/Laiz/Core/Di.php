@@ -25,8 +25,10 @@ class Di extends \Zend\Di\Di
         $callParameters = $this->resolveMethodParameters($methodClass, $method, $params, $alias, $methodIsRequired);
 
         if (count($callParameters) > 0 &&
-            $callParameters === array_fill(0, count($callParameters), null))
-            throw new \RuntimeException('Missing parameter ' . $methodClass . '::' . $method);
+            $callParameters === array_fill(0, count($callParameters), null)){
+            // Comment in the following: array(null) is handled as error
+            //throw new \RuntimeException('Missing parameter ' . $methodClass . '::' . $method);
+        }
 
         return call_user_func_array(array($instance, $method), $callParameters);
     }
