@@ -142,7 +142,7 @@ class Controller
         if ($ret)
             $view->setFile($ret);
         else
-            $view->setPath($action->getPageName());
+            $view->setFile($action->getPageName() . '.html');
         $view->show($response);
     }
 }

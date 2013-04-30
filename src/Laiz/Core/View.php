@@ -22,16 +22,10 @@ class View
         $this->file = $file;
         return $this;
     }
-    public function setPath($path)
-    {
-        $this->path = $path;
-        return $this;
-    }
     public function show($vars)
     {
         $this->template
             ->setFile($this->file)
-            ->setPath($this->path)
             ->show($vars);
     }
 }
