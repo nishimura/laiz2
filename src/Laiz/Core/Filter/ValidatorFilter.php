@@ -95,11 +95,11 @@ class ValidatorFilter
             break;
         case 'min':
         case 'max':
-            if (is_string($value)){
-                $validator = $this->manager->get('stringlength');
+            if (is_numeric($value)){
+                $validator = $this->manager->get('between');
                 $validator->{'set' . ucfirst($name)}($args[0]);
             }else{
-                $validator = $this->manager->get('between');
+                $validator = $this->manager->get('stringlength');
                 $validator->{'set' . ucfirst($name)}($args[0]);
             }
             break;
