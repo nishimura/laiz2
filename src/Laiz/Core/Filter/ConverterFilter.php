@@ -7,7 +7,9 @@ use Zend\Filter\FilterInterface;
 
 class ConverterFilter
 {
-    private $fwAliases = array('emptytonull' => 'Laiz\Core\Converter\EmptyToNullConverter');
+    private $fwAliases =
+        array('emptytonull' => 'Laiz\Core\Converter\EmptyToNullConverter',
+              'half' => 'Laiz\Core\Converter\HalfConverter');
     private $manager;
     public function __construct(FilterPluginManager $manager,
                                 $iniFile = null)
@@ -20,7 +22,6 @@ class ConverterFilter
                 $this->manager->setInvokableClass($k, $v);
         }
 
-        
         foreach ($this->fwAliases as $k => $v)
             $this->manager->setInvokableClass($k, $v);
     }
