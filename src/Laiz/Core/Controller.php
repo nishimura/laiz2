@@ -17,9 +17,7 @@ class Controller
 
     private $di;
     private $config;
-    private $logManager;
     private $request;
-    private $isDev;
 
     public function __construct($config)
     {
@@ -37,15 +35,6 @@ class Controller
                                'Zend\Http\PhpEnvironment\Request');
         $request = $this->di->get('Zend\Http\PhpEnvironment\Request');
         $env = $request->getServer(self::APPLICATION_ENV, self::ENV_DEV);
-        $this->isDev = $env === self::ENV_DEV;
-
-        $config = isset($this->config['logger']) ?
-            $this->config['logger'] : array();
-        $this->di
-            ->instanceManager()
-            ->setParameters('Laiz\Core\LogManager',
-                            array('config' => $config,
-                                  'display' => $this->isDev));
 
         // initialize di
         if (file_exists('config/di.ini')){
@@ -53,12 +42,6 @@ class Controller
             $diConfig = $reader->fromFile('config/di.ini');
             $this->setupDi($diConfig);
         }
-
-        $this->logManager = $this->di->get('Laiz\Core\LogManager');
-
-        $this->logManager
-            ->setErrorHandler()
-            ->setExceptionLogHandler();
 
         $this->request = $request;
         return $this;

@@ -20,7 +20,6 @@
     "php": ">=5.3.3",
     "laiz/laiz-template": "dev-master",
     "laiz/laiz-request": "0.1.*",
-    "monolog/monolog": "*",
     "zendframework/zend-stdlib": "2.1.*",
     "zendframework/zend-di": "2.1.*",
     "zendframework/zend-validator": "2.1.*",
