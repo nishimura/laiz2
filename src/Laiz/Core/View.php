@@ -8,6 +8,7 @@ class View
 {
     const PUBLIC_DIR = 'public';
     const CACHE_DIR = 'cache';
+    const CONFIG_FILE = 'config/view.ini';
 
     private $template;
     private $path;
@@ -16,6 +17,14 @@ class View
     public function __construct()
     {
         $this->template = new Parser(self::PUBLIC_DIR, self::CACHE_DIR);
+
+        if (file_exists(self::CONFIG_FILE)){
+            $config = parse_ini_file(self::CONFIG_FILE, true);
+            if (isset($config['behavior'])){
+                foreach ($config['behavior'] as $char => $callback)
+                    $this->template->addBehavior($char, $callback, true);
+            }
+        }
     }
     public function setFile($file)
     {
