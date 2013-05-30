@@ -42,8 +42,6 @@ class Di extends \Zend\Di\Di
 
         $props = $this->definition->getAnnotationProperties($class, $annotationClass);
         $runner = $this->get($runnerClass);
-        if (!$method)
-            throw new \RuntimeException($annotationClass . ' is not implements SingleContentAnnotation');
 
         foreach ($props as $prop => $params){
             foreach ($params as $param){
