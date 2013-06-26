@@ -2,12 +2,13 @@
 
 namespace Laiz\Core;
 
-use \Zend\ServiceManager\ServiceManager;
-use \Zend\ServiceManager\Config;
-use \Laiz\Request\Util as RequestUtil;
-use \Laiz\Request\Exception\RedirectExceptionInterface;
-use \Zend\Config\Reader\Ini;
-use \Zend\Validator\ValidatorPluginManager;
+use Zend\ServiceManager\ServiceManager;
+use Zend\ServiceManager\Config;
+use Zend\Config\Reader\Ini;
+use Zend\Validator\ValidatorPluginManager;
+use Laiz\Request\Util as RequestUtil;
+use Laiz\Request\Exception\RedirectExceptionInterface;
+use Laiz\Core\View\ExceptionInterface as ViewException;
 
 class Controller
 {
@@ -116,12 +117,20 @@ class Controller
         try {
             $ret = $action->run();
         }catch (RedirectExceptionInterface $e){
+            // send redirect header to the browser
             RequestUtil::handleRedirectException($e, $this->request);
+            return;
+        }catch (ViewException $e){
+            // run custom view
+            $e->run();
             return;
         }
 
-        // run view
-        $view = new View();
+        // run default view
+        $view = isset($this->config['view']['class']) ?
+            $this->config['view']['class'] : 'Laiz\Core\View\LaizView';
+
+        $view = new $view();
         if ($ret)
             $view->setFile($ret);
         else

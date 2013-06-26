@@ -1,10 +1,10 @@
 <?php
 
-namespace Laiz\Core;
+namespace Laiz\Core\View;
 
 use Laiz\Template\Parser;
 
-class View
+class LaizView implements ViewInterface
 {
     const PUBLIC_DIR = 'public';
     const CACHE_DIR = 'cache';
