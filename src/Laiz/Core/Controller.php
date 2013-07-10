@@ -8,7 +8,7 @@ use Zend\Config\Reader\Ini;
 use Zend\Validator\ValidatorPluginManager;
 use Laiz\Request\Util as RequestUtil;
 use Laiz\Request\Exception\RedirectExceptionInterface;
-use Laiz\Core\View\ExceptionInterface as ViewException;
+use Laiz\Core\Response\ExceptionInterface as ResponseException;
 
 class Controller
 {
@@ -120,9 +120,9 @@ class Controller
             // send redirect header to the browser
             RequestUtil::handleRedirectException($e, $this->request);
             return;
-        }catch (ViewException $e){
-            // run custom view
-            $e->run();
+        }catch (ResponseException $e){
+            // run custom response
+            $e->respond();
             return;
         }
 

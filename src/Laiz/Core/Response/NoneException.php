@@ -1,10 +1,10 @@
 <?php
 
-namespace Laiz\Core\View;
+namespace Laiz\Core\Response;
 
 use Exception;
 
 class NoneException extends Exception implements ExceptionInterface
 {
-    public function run(){}
+    public function respond(){}
 }
