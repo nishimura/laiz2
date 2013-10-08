@@ -80,6 +80,8 @@ class Controller
 
             if (isset($v['preload']) && $v['preload'])
                 $di->get($class);
+            if (isset($v['shared']))
+                $im->setShared($class, $v['shared']);
         }
     }
 
