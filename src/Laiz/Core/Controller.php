@@ -132,11 +132,17 @@ class Controller
         $view = isset($this->config['view']['class']) ?
             $this->config['view']['class'] : 'Laiz\Core\View\LaizView';
 
+        if ($ret){
+            $file = $ret;
+            $info = pathinfo($file);
+            $ext = isset($info['extension']) ? $info['extension'] : 'html';
+        }else{
+            $info = pathinfo($this->request->getUri()->getPath());
+            $ext = isset($info['extension']) ? $info['extension'] : 'html';
+            $file = $action->getPageName() . '.' . $ext;
+        }
         $view = new $view();
-        if ($ret)
-            $view->setFile($ret);
-        else
-            $view->setFile($action->getPageName() . '.html');
+        $view->setFile($file, $ext);
         $view->show($response);
     }
 }

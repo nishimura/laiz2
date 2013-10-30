@@ -26,7 +26,7 @@ class LaizView implements ViewInterface
             }
         }
     }
-    public function setFile($file)
+    public function setFile($file, $type = 'html')
     {
         $this->file = $file;
         return $this;
