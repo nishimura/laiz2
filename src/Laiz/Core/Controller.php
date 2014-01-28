@@ -2,147 +2,164 @@
 
 namespace Laiz\Core;
 
-use Zend\ServiceManager\ServiceManager;
-use Zend\ServiceManager\Config;
-use Zend\Config\Reader\Ini;
-use Zend\Validator\ValidatorPluginManager;
+use Zend\Http\PhpEnvironment\Request;
 use Laiz\Request\Util as RequestUtil;
 use Laiz\Request\Exception\RedirectExceptionInterface;
 use Laiz\Core\Response\ExceptionInterface as ResponseException;
+use Laiz\Template\Parser as Template;
+
+use stdClass;
+use ReflectionClass;
+use ReflectionMethod;
 
 class Controller
 {
-
-    const APPLICATION_ENV = 'APPLICATION_ENV';
-    const ENV_DEV = 'development';
-
     private $di;
-    private $config;
-    private $request;
 
-    public function __construct($config)
+    protected function __construct($di)
     {
-        $this->config = $config;
+        $this->di = $di;
     }
 
-    public function bootstrap()
+    public static function newInstance($di)
     {
-        // initialize required instances
-        $this->di = new Di();
-        $im = $this->di->instanceManager();
-        $im->addSharedInstance($this->di, get_class($this->di));
-
-        $im->addTypePreference('Zend\Stdlib\RequestInterface',
-                               'Zend\Http\PhpEnvironment\Request');
-        $request = $this->di->get('Zend\Http\PhpEnvironment\Request');
-        $env = $request->getServer(self::APPLICATION_ENV, self::ENV_DEV);
-
-        // initialize di
-        if (file_exists('config/di.ini')){
-            $reader = new Ini();
-            $diConfig = $reader->fromFile('config/di.ini');
-            $this->setupDi($diConfig);
-        }
-
-        $this->request = $request;
-        return $this;
+        return new static($di);
     }
 
-    private function setupDi($config)
+    private function canonicalizePath($request)
     {
-        $di = $this->di;
-        $im = $di->instanceManager();
+        $path = $request->getUri()->getPath();
+        if (preg_match('|\.html/$|', $path))
+            $path = rtrim($path, '/');
+        else if (preg_match('|/$|', $path))
+            $path .= 'index.html';
 
-        // include other ini files.
-        if (isset($config['include'])){
-            $reader = new Ini();
-            foreach ((array)$config['include'] as $file){
-                $subConfig = $reader->fromFile($file);
-                $this->setupDi($subConfig);
-            }
-            unset($config['include']);
-        }
-        foreach ($config as $class => $v){
-            if (isset($v['alias']))
-                $im->addAlias($class, $v['alias']);
-
-            if (isset($v['parameters']))
-                $im->setParameters($class, $v['parameters']);
-
-            if (isset($v['interface']))
-                $im->addTypePreference($v['interface'], $class);
-
-            if (isset($v['methods'])){
-                foreach ($v['methods'] as $method => $params){
-                    $im->setInjections($class, array($method => (array)$params));
-                }
-            }
-
-            if (isset($v['preload']) && $v['preload'])
-                $di->get($class);
-            if (isset($v['shared']))
-                $im->setShared($class, $v['shared']);
-        }
+        $info = pathinfo($path);
+        $path = $info['dirname'] . '/' . $info['filename'];
+        $path = ltrim($path, '/');
+        if (isset($info['extension']))
+            $ext = $info['extension'];
+        else
+            $ext = 'html';
+        return array($path, $ext);
     }
 
-    public static function init($config = null)
+    private function getPageAndMethod($path)
     {
-        // initialize config
-        if ($config === null){
-            if (file_exists('config/config.ini')){
-                $reader = new Ini();
-                $config = $reader->fromFile('config/config.ini');
-            }else{
-                $config = array();
-            }
+        $methodName = null;
+
+        $dirs = array_map('ucfirst', explode('/', $path));
+        $cls = array_pop($dirs);
+        $parts = explode('_', $cls);
+        if (count($parts) > 1)
+            $method = array_pop($parts);
+        else
+            $method = 'index';
+        $cls = implode('', array_map('ucfirst', $parts));
+        $dirs[] = $cls;
+        $clspath = implode('\\', $dirs);
+        $clspath = implode('', array_map('ucfirst', explode('_', $clspath)));
+
+        $clspath = $this->di->get('laizPageNamespace') . '\\' . $clspath;
+        if (!class_exists($clspath) && $method != 'index'){
+            $clspath .= '\\' . ucfirst($method);
+            $method = 'index';
         }
-        $self = new static($config);
-        return $self->bootstrap();
+
+        if (!class_exists($clspath))
+            return array(null, null);
+
+        $page = $this->di->get($clspath);
+        if (!method_exists($page, $method))
+            return array(null, null);
+
+        return array($page, $method);
     }
 
-    public function run(){
-        $response = $this->di->get('Laiz\Core\Response');
+    private function showView($file, $response)
+    {
+        $publicdir = $this->di->get('laizViewPublicDir');
+        $cachedir = $this->di->get('laizViewCacheDir');
+        $template = new Template($publicdir, $cachedir);
 
-        $actionConfig = isset($this->config['action']) ?
-            $this->config['action'] : array();
+        $behaviors = $this->di->get('laizViewBehaviors');
+        if ($behaviors){
+            foreach ($behaviors as $char => $callback)
+                $template->addBehavior($char, $callback, true);
+        }
 
-        
-        $this->di
-            ->instanceManager()
-            ->setParameters('Laiz\Core\Action',
-                            array('response' => $response,
-                                  'config' => $actionConfig));
+        $template
+            ->setFile($file)
+            ->show($response);
+    }
 
-        $action = $this->di->get('Laiz\Core\Action');
+    private function runFilter($method, $request, $response)
+    {
+        $filterContainer = $this->di->get('Laiz\Core\FilterContainer');
 
-        // run action
         try {
-            $ret = $action->run();
+            $ret = $filterContainer->run($method);
+
         }catch (RedirectExceptionInterface $e){
             // send redirect header to the browser
-            RequestUtil::handleRedirectException($e, $this->request);
-            return;
+            RequestUtil::handleRedirectException($e, $request);
+            return false;
         }catch (ResponseException $e){
             // run custom response
             $e->respond();
-            return;
+            return false;
         }
 
-        // run default view
-        $view = isset($this->config['view']['class']) ?
-            $this->config['view']['class'] : 'Laiz\Core\View\LaizView';
+        foreach ($ret as $obj){
+            foreach ($obj as $k => $v)
+                $response->$k = $v;
+        }
+        return true;
+    }
+
+    public function run(){
+        $request = new Request();
+
+        list($path, $ext) = $this->canonicalizePath($request);
+
+        list($page, $methodName) = $this->getPageAndMethod($path);
+
+        $response = new stdClass();
+
+        if (!$this->runFilter('preFilter', $request, $response))
+            return;
+
+        $ret = null;
+        if ($page && $methodName){
+            try {
+
+                $runner = $this->di->get('Laiz\Core\Page');
+                $ret = $runner->run($page, $methodName, $request, $response);
+
+                foreach ($page as $k => $v)
+                    if ($k[0] !== '_')
+                        $response->$k = $v;
+
+            }catch (RedirectExceptionInterface $e){
+                // send redirect header to the browser
+                RequestUtil::handleRedirectException($e, $request);
+                return;
+            }catch (ResponseException $e){
+                // run custom response
+                $e->respond();
+                return;
+            }
+        }
+
+        if (!$this->runFilter('postFilter', $request, $response))
+            return;
 
         if ($ret){
             $file = $ret;
-            $info = pathinfo($file);
-            $ext = isset($info['extension']) ? $info['extension'] : 'html';
         }else{
-            $info = pathinfo($this->request->getUri()->getPath());
-            $ext = isset($info['extension']) ? $info['extension'] : 'html';
-            $file = $action->getPageName() . '.' . $ext;
+            $file = $path . '.' . $ext;
         }
-        $view = new $view();
-        $view->setFile($file, $ext);
-        $view->show($response);
+
+        $this->showView($file, $response);
     }
 }

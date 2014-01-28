@@ -20,17 +20,11 @@
     "php": ">=5.3.3",
     "laiz/laiz-template": "1.2.*",
     "laiz/laiz-request": "0.1.*",
-    "zendframework/zend-stdlib": "2.*",
-    "zendframework/zend-di": "2.*",
-    "zendframework/zend-validator": "2.*",
-    "zendframework/zend-filter": "2.*",
-    "zendframework/zend-config": "2.*",
-    "zendframework/zend-inputfilter": "2.*",
+    "laiz/laiz-db": "1.*",
     "zendframework/zend-uri": "2.*",
     "zendframework/zend-http": "2.*"
   },
   "suggest": {
     "laiz/laiz-session": "Laiz\\Session component",
-    "laiz/laiz-db": "Laiz\\Db component"
   }
 }
