@@ -16,14 +16,21 @@ class LaizView implements ViewInterface
 
     public function __construct()
     {
-        $this->template = new Parser(self::PUBLIC_DIR, self::CACHE_DIR);
-
+        $publicdir = self::PUBLIC_DIR;
+        $cachedir = self::CACHE_DIR;
         if (file_exists(self::CONFIG_FILE)){
             $config = parse_ini_file(self::CONFIG_FILE, true);
-            if (isset($config['behavior'])){
-                foreach ($config['behavior'] as $char => $callback)
-                    $this->template->addBehavior($char, $callback, true);
-            }
+            if (isset($config['dir']['public']))
+                $publicdir = $config['dir']['public'];
+
+            if (isset($config['dir']['cache']))
+                $publicdir = $config['dir']['cache'];
+        }
+        $this->template = new Parser($publicdir, $cachedir);
+
+        if (isset($config['behavior'])){
+            foreach ($config['behavior'] as $char => $callback)
+                $this->template->addBehavior($char, $callback, true);
         }
     }
     public function setFile($file, $type = 'html')
