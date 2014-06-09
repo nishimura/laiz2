@@ -25,6 +25,6 @@
     "zendframework/zend-http": "2.*"
   },
   "suggest": {
-    "laiz/laiz-session": "Laiz\\Session component",
+    "laiz/laiz-session": "Laiz\\Session component"
   }
 }
