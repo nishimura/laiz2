@@ -31,8 +31,7 @@ class Container
         if (isset($this->aliases[$name]))
             return $this->get($this->aliases[$name]);
 
-        $this->components[$name] = $this->build($name);
-        return $this->components[$name];
+        return $this->build($name);
     }
     public function register($name, $component)
     {
