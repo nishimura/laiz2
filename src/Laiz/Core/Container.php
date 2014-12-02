@@ -14,6 +14,8 @@ class Container
     private $aliases = array();
     private $methods = array();
     private $prototypes = array();
+    private $initializers = array();
+
     public function __construct()
     {
     }
@@ -54,6 +56,11 @@ class Container
     public function setAlias($from, $to)
     {
         $this->aliases[$from] = $to;
+    }
+
+    public function setInitializer($className, callable $callback)
+    {
+        $this->initializers[$className] = $callback;
     }
 
     public function call($obj, $name, $addParams = array())
@@ -98,6 +105,8 @@ class Container
         }
 
         $component = $refClass->newInstanceArgs($params);
+        if (isset($this->initializers[$name]))
+            $this->initializers[$name]($component);
 
         if (!isset($this->prototypes[$name]) || !$this->prototypes[$name])
             $this->register($name, $component);
